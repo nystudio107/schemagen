@@ -229,10 +229,11 @@ function getTextValue(mixed $fieldValue, bool $removeBreaks = true): string
     if (is_array($fieldValue)) {
         $fieldValue = $fieldValue['@value'];
     }
-
+    $fieldValue = html_entity_decode($fieldValue);
     if ($removeBreaks) {
-        $fieldValue = str_replace(array('<br />', "\n"), ' ', $fieldValue);
+        $fieldValue = str_replace(['<br />', '\n', "\n"], ' ', $fieldValue);
     }
+
     return $fieldValue;
 }
 
