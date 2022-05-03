@@ -1,0 +1,7 @@
+
+    /**
+     * {@propertyDescription}
+     *
+     * @var {@propertyType}
+     */
+    public ${@propertyHandle};
