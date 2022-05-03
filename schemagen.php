@@ -207,7 +207,7 @@ $application = new Application();
                 $schemaPropertyDescriptionsAsArray .= implode(",\n", $schemaPropertyDescriptions) . "\n        ]";
 
                 $craftVersion = CRAFT_VERSION;
-                $currentYear = CURRENT_YEAR;
+                $currentYear = date("Y");
                 $namespace = MODEL_NAMESPACE;
                 $schemaTraitStatements = implode("\n", $schemaTraitStatements);
 
