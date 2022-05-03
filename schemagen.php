@@ -211,7 +211,7 @@ $application = new Application();
                 $namespace = MODEL_NAMESPACE;
                 $schemaTraitStatements = implode("\n", $schemaTraitStatements);
 
-                $model = parseTemplate(file_get_contents(MODEL_TEMPLATE), compact(
+                $model = parseTemplate(file_get_contents(getTemplatePath(MODEL_TEMPLATE)), compact(
                         'craftVersion',
                         'currentYear',
                         'namespace',

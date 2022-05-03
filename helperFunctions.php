@@ -50,7 +50,7 @@ function makeField(array $propertyDef): string
 {
     $fieldData = compileFieldData($propertyDef);
     $fieldData['propertyDescription'] = wordwrap($fieldData['propertyDescription'], 75, "\n     * ");
-    return parseTemplate(file_get_contents(FIELD_TEMPLATE), $fieldData);
+    return parseTemplate(file_get_contents(getTemplatePath(FIELD_TEMPLATE)), $fieldData);
 }
 
 /**
@@ -84,6 +84,17 @@ function compileFieldData(array $propertyDef): array
 }
 
 /**
+ * Return the path to the template based on the current CRAFT_VERSION
+ *
+ * @param string $template
+ * @return string
+ */
+function getTemplatePath(string $template): string
+{
+    return TEMPLATES_DIR . 'v' . CRAFT_VERSION . '/' . $template;
+}
+
+/**
  * Make the trait.
  *
  * @param string $schemaName
@@ -100,13 +111,13 @@ function makeTrait(string $schemaName, array $properties): string
 
     $schemaPropertiesAsFields = implode("", $fields);
     $craftVersion = CRAFT_VERSION;
-    $currentYear = CURRENT_YEAR;
+    $currentYear = date("Y");
     $namespace = MODEL_NAMESPACE;
     $schemaScope = getScope($schemaName);
     $schemaTraitName = $schemaName . 'Trait';
 
 
-    return parseTemplate(file_get_contents(TRAIT_TEMPLATE), compact(
+    return parseTemplate(file_get_contents(getTemplatePath(TRAIT_TEMPLATE)), compact(
             'schemaPropertiesAsFields',
             'schemaName',
             'craftVersion',
