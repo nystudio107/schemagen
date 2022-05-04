@@ -91,7 +91,7 @@ function compileFieldData(array $propertyDef): array
  */
 function getTemplatePath(string $template): string
 {
-    return TEMPLATES_DIR . 'v' . CRAFT_VERSION . '/' . $template;
+    return TEMPLATES_DIR . '/' . $template;
 }
 
 /**
@@ -110,7 +110,6 @@ function makeTrait(string $schemaName, array $properties): string
     }
 
     $schemaPropertiesAsFields = implode("", $fields);
-    $craftVersion = CRAFT_VERSION;
     $currentYear = date("Y");
     $namespace = MODEL_NAMESPACE;
     $schemaScope = getScope($schemaName);
@@ -120,7 +119,6 @@ function makeTrait(string $schemaName, array $properties): string
     return parseTemplate(file_get_contents(getTemplatePath(TRAIT_TEMPLATE)), compact(
             'schemaPropertiesAsFields',
             'schemaName',
-            'craftVersion',
             'currentYear',
             'namespace',
             'schemaScope',

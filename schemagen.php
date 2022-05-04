@@ -25,6 +25,7 @@ $application = new Application();
     ->addArgument('source', InputArgument::OPTIONAL, 'The data source URL or file location')
     ->addArgument('outputDir', InputArgument::OPTIONAL, 'The output directory')
     ->addOption('skipSuperseded', 's', InputOption::VALUE_OPTIONAL, 'Whether superseded entities should be skipped', false)
+    ->addOption('craft-version', 'c', InputOption::VALUE_OPTIONAL, 'Craft version to generate the models for. Defaults to 3.', 3)
     ->setCode(function (InputInterface $input, OutputInterface $output) {
         $source = $input->getArgument('source') ?? 'https://schema.org/version/latest/schemaorg-current-https.jsonld';
         $outputDir = $input->getArgument('outputDir') ?? 'output';
@@ -206,13 +207,14 @@ $application = new Application();
                 $schemaPropertyExpectedTypesAsArray .= implode(",\n", $schemaPropertyTypes) . "\n        ]";
                 $schemaPropertyDescriptionsAsArray .= implode(",\n", $schemaPropertyDescriptions) . "\n        ]";
 
-                $craftVersion = CRAFT_VERSION;
                 $currentYear = date("Y");
                 $namespace = MODEL_NAMESPACE;
                 $schemaTraitStatements = implode("\n", $schemaTraitStatements);
 
+                $stringType = $input->getOption('craft-version') == 3 ? '' : 'string ';
+                
                 $model = parseTemplate(file_get_contents(getTemplatePath(MODEL_TEMPLATE)), compact(
-                        'craftVersion',
+                        'stringType',
                         'currentYear',
                         'namespace',
                         'schemaName',

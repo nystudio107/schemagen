@@ -18,7 +18,7 @@ use nystudio107\seomatic\models\MetaJsonLd;
  *
  * @author    nystudio107
  * @package   Seomatic
- * @since     4.0.0
+ * @since     3.5.0
 * @see       {@schemaScope}
  */
 class {@schemaClass} extends MetaJsonLd
@@ -31,21 +31,21 @@ class {@schemaClass} extends MetaJsonLd
      *
      * @var string
      */
-    static public string $schemaTypeName = '{@schemaName}';
+    static public {@stringType}$schemaTypeName = '{@schemaName}';
 
     /**
      * The Schema.org Type Scope
      *
      * @var string
      */
-    static public string $schemaTypeScope = '{@schemaScope}';
+    static public {@stringType}$schemaTypeScope = '{@schemaScope}';
 
     /**
      * The Schema.org Type Description
      *
      * @var string
      */
-    static public string $schemaTypeDescription = <<<SCHEMADESC
+    static public {@stringType}$schemaTypeDescription = <<<SCHEMADESC
 {@schemaDescriptionRaw}
 SCHEMADESC;
 

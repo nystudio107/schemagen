@@ -1,5 +1,4 @@
 <?php
-const CRAFT_VERSION = 4;
 const MODEL_NAMESPACE = 'nystudio107\\seomatic\\models\\jsonld';
 const TEMPLATES_DIR = 'templates/';
 const TRAIT_TEMPLATE = 'trait.php.template';

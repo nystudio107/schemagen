@@ -16,7 +16,7 @@ namespace {@namespace};
  *
  * @author    nystudio107
  * @package   Seomatic
- * @since     4.0.0
+ * @since     3.5.0
  * @see       {@schemaScope}
  */
 
