@@ -70,6 +70,22 @@ function compileFieldData(array $propertyDef): array
 
     foreach ($propertyTypes as &$type) {
         $type = substr($type['@id'], 7);
+        switch ($type) {
+            case 'Text':
+            case 'Url':
+                $type = 'string';
+                break;
+            case 'Integer':
+                $type = 'int';
+                break;
+            case 'Number':
+            case 'Float':
+                $type = 'float';
+                break;
+            case 'Boolean':
+                $type = 'bool';
+                break;
+        }
         $propertyTypesAsArray[] = $type;
     }
 

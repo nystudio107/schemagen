@@ -212,7 +212,7 @@ $application = new Application();
                 $schemaTraitStatements = implode("\n", $schemaTraitStatements);
 
                 $stringType = $input->getOption('craft-version') == 3 ? '' : 'string ';
-                
+
                 $model = parseTemplate(file_get_contents(getTemplatePath(MODEL_TEMPLATE)), compact(
                         'stringType',
                         'currentYear',
