@@ -121,10 +121,13 @@ $application = new Application();
                 $schemaName = getTextValue($classDef['rdfs:label']);
                 $schemaClass = getSchemaClassName($schemaName);
                 $schemaTraitName = $schemaClass . 'Trait';
+                $schemaInterfaceName = $schemaClass . 'Interface';
                 $propertiesBySchemaName[$schemaName] = $properties[$id] ?? [];
 
                 $trait = makeTrait($schemaClass, $properties[$id] ?? []);
                 saveGeneratedFile($schemaTraitName . '.php', $trait);
+                $interface = makeInterface($schemaClass);
+                saveGeneratedFile($schemaInterfaceName . '.php', $interface);
 
                 $entityTree[$schemaName] = [];
 
@@ -152,6 +155,7 @@ $application = new Application();
         foreach ($classes as $id => $classDef) {
             if (str_starts_with($id, 'schema:')) {
                 $schemaTraitStatements = [];
+                $schemaInterfaces = [];
 
                 $schemaName = getTextValue($classDef['rdfs:label']);
                 $schemaClass = getSchemaClassName($schemaName);
@@ -159,6 +163,7 @@ $application = new Application();
                 $schemaDescription = wordwrap(getTextValue($classDef['rdfs:comment']), 75, "\n * ");
                 $schemaScope = getScope($schemaName);
 
+                $schemaInterfaces[] = $schemaClass . 'Interface';
                 $schemaTraitStatements[] = "    use {$schemaClass}Trait;";
                 $ancestors = [];
                 loadAllAncestors($ancestors, $entityTree, $schemaName);
@@ -167,6 +172,7 @@ $application = new Application();
                 // Include all ancestor traits
                 foreach ($ancestors as $ancestor) {
                     $schemaTraitStatements[] = '    use ' . getSchemaClassName($ancestor) . 'Trait;';
+                    $schemaInterfaces[] = getSchemaClassName($ancestor) . 'Interface';
                 }
 
                 // Load google field information
@@ -210,6 +216,7 @@ $application = new Application();
                 $currentYear = date("Y");
                 $namespace = MODEL_NAMESPACE;
                 $schemaTraitStatements = implode("\n", $schemaTraitStatements);
+                $schemaInterfaces = implode(", ", $schemaInterfaces);
 
                 $stringType = $input->getOption('craft-version') == 3 ? '' : 'string ';
 
@@ -223,6 +230,7 @@ $application = new Application();
                         'schemaScope',
                         'schemaClass',
                         'schemaTraitStatements',
+                        'schemaInterfaces',
                         'googleRequiredSchemaAsArray',
                         'googleRecommendedSchemaAsArray',
                         'schemaPropertyExpectedTypesAsArray',

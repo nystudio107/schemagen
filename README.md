@@ -45,6 +45,7 @@ Additional options can also be set in the `config.php` file:
 const CRAFT_VERSION = 4;
 const MODEL_NAMESPACE = 'nystudio107\\seomatic\\models\\jsonld';
 const TEMPLATES_DIR = 'templates/';
+const INTERFACE_TEMPLATE = 'interface.php.template';
 const TRAIT_TEMPLATE = 'trait.php.template';
 const MODEL_TEMPLATE = 'model.php.template';
 const FIELD_TEMPLATE = 'field.template';

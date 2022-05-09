@@ -110,6 +110,21 @@ function getTemplatePath(string $template): string
     return TEMPLATES_DIR . '/' . $template;
 }
 
+function makeInterface(string $schemaName): string
+{
+    $schemaInterfaceName = $schemaName . 'Interface';
+    $namespace = MODEL_NAMESPACE;
+    $schemaScope = getScope($schemaName);
+    $currentYear = date("Y");
+
+    return parseTemplate(file_get_contents(getTemplatePath(INTERFACE_TEMPLATE)), compact(
+            'schemaName',
+            'namespace',
+            'schemaScope',
+            'schemaInterfaceName')
+    );
+}
+
 /**
  * Make the trait.
  *

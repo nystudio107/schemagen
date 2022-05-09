@@ -21,7 +21,7 @@ use nystudio107\seomatic\models\MetaJsonLd;
  * @since     3.5.0
 * @see       {@schemaScope}
  */
-class {@schemaClass} extends MetaJsonLd
+class {@schemaClass} extends MetaJsonLd implements {@schemaInterfaces}
 {
     // Static Public Properties
     // =========================================================================
