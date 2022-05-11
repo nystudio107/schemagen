@@ -19,7 +19,7 @@ function nukeDir(string $path): void
  */
 function ensureDir(string $dir): void
 {
-    if (!@mkdir($dir) && !is_dir($dir)) {
+    if (!@mkdir($dir, 0777, true) && !is_dir($dir)) {
         throw new \RuntimeException(sprintf('Directory "%s" was not created', $dir));
     }
 }
@@ -191,12 +191,11 @@ function getScope(string $schemaName): string
 /**
  * Save a generated file.
  *
- * @param string $fileName
+ * @param string $path
  * @param string $content
  */
-function saveGeneratedFile(string $fileName, string $content): void
+function saveGeneratedFile(string $path, string $content): void
 {
-    $path = OUTPUT_FOLDER . $fileName;
     file_put_contents($path, $content);
 }
 

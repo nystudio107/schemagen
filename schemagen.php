@@ -27,8 +27,8 @@ $application = new Application();
     ->addOption('skipSuperseded', 's', InputOption::VALUE_OPTIONAL, 'Whether superseded entities should be skipped', false)
     ->addOption('craft-version', 'c', InputOption::VALUE_OPTIONAL, 'Craft version to generate the models for. Defaults to 3.', 3)
     ->setCode(function (InputInterface $input, OutputInterface $output) {
-        $source = $input->getArgument('source') ?? 'https://schema.org/version/latest/schemaorg-current-https.jsonld';
-        $outputDir = $input->getArgument('outputDir') ?? 'output';
+        $source = $input->getArgument('source') ?? SCHEMA_SOURCE;
+        $outputDir = $input->getArgument('outputDir') ?? OUTPUT_FOLDER;
 
 
         // ensure output folders exist
@@ -125,9 +125,9 @@ $application = new Application();
                 $propertiesBySchemaName[$schemaName] = $properties[$id] ?? [];
 
                 $trait = makeTrait($schemaClass, $properties[$id] ?? []);
-                saveGeneratedFile($schemaTraitName . '.php', $trait);
+                saveGeneratedFile($outputDir . $schemaTraitName . '.php', $trait);
                 $interface = makeInterface($schemaClass);
-                saveGeneratedFile($schemaInterfaceName . '.php', $interface);
+                saveGeneratedFile($outputDir . $schemaInterfaceName . '.php', $interface);
 
                 $entityTree[$schemaName] = [];
 
@@ -238,7 +238,7 @@ $application = new Application();
                     )
                 );
 
-                saveGeneratedFile($schemaClass . '.php', $model);
+                saveGeneratedFile($outputDir . $schemaClass . '.php', $model);
             }
         }
 
