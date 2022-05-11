@@ -38,8 +38,8 @@ make schemagen SOURCE OUTPUT_DIR
 
 Additional options can be passed into the `make schemagen` command:
 
-- `c X` - The Craft version to generate the models for. Defaults to 3.
-- `-s` command line option that can be used, which controls whether superseded entities should be skipped, defaults to `false`
+- `-c X` - The Craft version to generate the models for. Defaults to 3. e.g.: `make schemagen -- -c 4`
+- `-s` command line option that can be used, which controls whether superseded entities should be skipped, defaults to `false`.  e.g.: `make schemagen -- -s`
 
 Additional options can also be set in the `config.php` file:
 
