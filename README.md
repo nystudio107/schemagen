@@ -36,20 +36,23 @@ make schemagen SOURCE OUTPUT_DIR
 - `SOURCE` - the URL to the schema.org types to use, defaults to `https://schema.org/version/latest/schemaorg-current-https.jsonld`
 - `OUTPUT_DIR` - the directory to output the models to, defaults to `output/`
 
-There is also a `-s` command line option that can be used, which controls whether superseded entities should be skipped, defaults to `false`
+Additional options can be passed into the `make schemagen` command:
+
+- `c X` - The Craft version to generate the models for. Defaults to 3.
+- `-s` command line option that can be used, which controls whether superseded entities should be skipped, defaults to `false`
 
 Additional options can also be set in the `config.php` file:
 
 ```php
 <?php
-const CRAFT_VERSION = 4;
+const SCHEMA_SOURCE = 'https://schema.org/version/latest/schemaorg-current-https.jsonld';
 const MODEL_NAMESPACE = 'nystudio107\\seomatic\\models\\jsonld';
 const TEMPLATES_DIR = 'templates/';
 const INTERFACE_TEMPLATE = 'interface.php.template';
 const TRAIT_TEMPLATE = 'trait.php.template';
 const MODEL_TEMPLATE = 'model.php.template';
 const FIELD_TEMPLATE = 'field.template';
-const OUTPUT_FOLDER = 'output/';
+const OUTPUT_FOLDER = 'dist/jsonld/';
 ```
 
 Brought to you by [nystudio107](http://nystudio107.com)
