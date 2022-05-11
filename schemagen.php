@@ -28,7 +28,7 @@ $application = new Application();
     ->addOption('craft-version', 'c', InputOption::VALUE_OPTIONAL, 'Craft version to generate the models for. Defaults to 3.', 3)
     ->setCode(function (InputInterface $input, OutputInterface $output) {
         $source = $input->getArgument('source') ?? SCHEMA_SOURCE;
-        $outputDir = $input->getArgument('outputDir') ?? OUTPUT_FOLDER;
+        $outputDir = $input->getArgument('outputDir') ?? OUTPUT_DIR;
 
 
         // ensure output folders exist

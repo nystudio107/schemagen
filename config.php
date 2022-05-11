@@ -6,4 +6,4 @@ const INTERFACE_TEMPLATE = 'interface.php.template';
 const TRAIT_TEMPLATE = 'trait.php.template';
 const MODEL_TEMPLATE = 'model.php.template';
 const FIELD_TEMPLATE = 'field.template';
-const OUTPUT_FOLDER = 'dist/jsonld/';
+const OUTPUT_DIR = 'dist/jsonld/';
