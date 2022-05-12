@@ -40,6 +40,28 @@ $application = new Application();
             return Command::FAILURE;
         }
 
+        // Fetch the latest release name
+        $schemaRelease = 'latest';
+        $releases = SCHEMA_RELEASES;
+        $output->writeln("<info>Fetching releases data</info> - <comment>$releases</comment>");
+        // Per: https://stackoverflow.com/questions/37141315/file-get-contents-gets-403-from-api-github-com-every-time
+        $opts = [
+            'http' => [
+                'method' => 'GET',
+                'header' => [
+                    'User-Agent: PHP'
+                ]
+            ]
+        ];
+        $context = stream_context_create($opts);
+        $data = file_get_contents($releases, false, $context);
+        if ($data) {
+            $data = json_decode($data);
+            if (is_array($data)) {
+                $schemaRelease = $data[0]->tag_name ?? 'latest';
+            }
+        }
+
         $output->writeln("<info>Fetching data source</info> - <comment>$source</comment>");
         $data = file_get_contents($source);
 
@@ -124,9 +146,9 @@ $application = new Application();
                 $schemaInterfaceName = $schemaClass . 'Interface';
                 $propertiesBySchemaName[$schemaName] = $properties[$id] ?? [];
 
-                $trait = makeTrait($schemaClass, $properties[$id] ?? []);
+                $trait = makeTrait($schemaClass, $properties[$id] ?? [], $schemaRelease);
                 saveGeneratedFile($outputDir . $schemaTraitName . '.php', $trait);
-                $interface = makeInterface($schemaClass);
+                $interface = makeInterface($schemaClass, $schemaRelease);
                 saveGeneratedFile($outputDir . $schemaInterfaceName . '.php', $interface);
 
                 $entityTree[$schemaName] = [];
@@ -231,6 +253,7 @@ $application = new Application();
                         'schemaClass',
                         'schemaTraitStatements',
                         'schemaInterfaces',
+                        'schemaRelease',
                         'googleRequiredSchemaAsArray',
                         'googleRecommendedSchemaAsArray',
                         'schemaPropertyExpectedTypesAsArray',

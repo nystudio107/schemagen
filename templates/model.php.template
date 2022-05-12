@@ -14,11 +14,11 @@ namespace {@namespace};
 use nystudio107\seomatic\models\MetaJsonLd;
 
 /**
+ * schema.org version: {@schemaRelease}
  * {@schemaName} - {@schemaDescription}
  *
  * @author    nystudio107
  * @package   Seomatic
- * @since     3.5.0
  * @see       {@schemaScope}
  */
 class {@schemaClass} extends MetaJsonLd implements {@schemaInterfaces}

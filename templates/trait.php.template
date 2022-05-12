@@ -12,11 +12,11 @@
 namespace {@namespace};
 
 /**
+ * schema.org version: {@schemaRelease}
  * Trait for {@schemaName}.
  *
  * @author    nystudio107
  * @package   Seomatic
- * @since     3.5.0
  * @see       {@schemaScope}
  */
 

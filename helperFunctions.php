@@ -110,7 +110,7 @@ function getTemplatePath(string $template): string
     return TEMPLATES_DIR . '/' . $template;
 }
 
-function makeInterface(string $schemaName): string
+function makeInterface(string $schemaName, string $schemaRelease): string
 {
     $schemaInterfaceName = $schemaName . 'Interface';
     $namespace = MODEL_NAMESPACE;
@@ -120,8 +120,11 @@ function makeInterface(string $schemaName): string
     return parseTemplate(file_get_contents(getTemplatePath(INTERFACE_TEMPLATE)), compact(
             'schemaName',
             'namespace',
+            'currentYear',
             'schemaScope',
-            'schemaInterfaceName')
+            'schemaInterfaceName',
+            'schemaRelease',
+        )
     );
 }
 
@@ -132,7 +135,7 @@ function makeInterface(string $schemaName): string
  * @param array $properties
  * @return string
  */
-function makeTrait(string $schemaName, array $properties): string
+function makeTrait(string $schemaName, array $properties, string $schemaRelease): string
 {
     $fields = [];
 
@@ -153,7 +156,9 @@ function makeTrait(string $schemaName, array $properties): string
             'currentYear',
             'namespace',
             'schemaScope',
-            'schemaTraitName')
+            'schemaTraitName',
+            'schemaRelease',
+       )
     );
 }
 
