@@ -97,29 +97,39 @@ function compileFieldData(array $propertyDef): array
     $propertyHandle = getTextValue($propertyDef['rdfs:label']) ?? '';
 
     $propertyTypesAsArray = [];
+    $propertyPhpTypesAsArray = [];
 
-    foreach ($propertyTypes as &$type) {
-        $type = substr($type['@id'], 7);
-        switch ($type) {
+    foreach ($propertyTypes as &$schemaType) {
+        $schemaType = substr($schemaType['@id'], 7);
+        switch ($schemaType) {
             case 'Text':
             case 'Url':
-                $type = 'string';
+            $phpType = 'string';
                 break;
             case 'Integer':
-                $type = 'int';
+                $phpType = 'int';
                 break;
             case 'Number':
             case 'Float':
-                $type = 'float';
+            $phpType = 'float';
                 break;
             case 'Boolean':
-                $type = 'bool';
+                $phpType = 'bool';
+                break;
+            default:
+                $phpType = '';
                 break;
         }
-        $propertyTypesAsArray[] = $type;
+        $propertyTypesAsArray[] = $schemaType;
+        $propertyPhpTypesAsArray[] = $phpType;
     }
 
-    $propertyType = implode('|', $propertyTypes);
+    $propertyPhpTypesAsArray = array_merge(
+        array_filter($propertyPhpTypesAsArray),
+        $propertyTypesAsArray,
+    );
+
+    $propertyType = implode('|', $propertyPhpTypesAsArray);
 
     return compact(
         'propertyDescription',
