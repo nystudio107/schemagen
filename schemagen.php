@@ -29,7 +29,7 @@ $application = new Application();
     ->setCode(function (InputInterface $input, OutputInterface $output) {
         $source = $input->getArgument('source') ?? SCHEMA_SOURCE;
         $outputDir = $input->getArgument('outputDir') ?? OUTPUT_DIR;
-
+        $craftVersion = (int)($input->getOption('craft-version') ?? 3);
 
         // ensure output folders exist
         try {
@@ -129,9 +129,9 @@ $application = new Application();
                 $schemaInterfaceName = $schemaClass . 'Interface';
                 $propertiesBySchemaName[$schemaName] = $properties[$id] ?? [];
 
-                $trait = makeTrait($schemaClass, $properties[$id] ?? [], $schemaRelease);
+                $trait = makeTrait($schemaClass, $properties[$id] ?? [], $schemaRelease, $craftVersion);
                 saveGeneratedFile($outputDir . $schemaTraitName . '.php', $trait);
-                $interface = makeInterface($schemaClass, $schemaRelease);
+                $interface = makeInterface($schemaClass, $schemaRelease, $craftVersion);
                 saveGeneratedFile($outputDir . $schemaInterfaceName . '.php', $interface);
 
                 $entityTree[$schemaName] = [];
@@ -223,12 +223,13 @@ $application = new Application();
                 $schemaTraitStatements = implode("\n", $schemaTraitStatements);
                 $schemaInterfaces = implode(", ", $schemaInterfaces);
 
-                $stringType = $input->getOption('craft-version') == 3 ? '' : 'string ';
+                $stringType = $craftVersion === 3 ? '' : 'string ';
 
                 $model = parseTemplate(file_get_contents(getTemplatePath(MODEL_TEMPLATE)), compact(
                         'stringType',
                         'currentYear',
                         'namespace',
+                        'craftVersion',
                         'schemaName',
                         'schemaDescription',
                         'schemaDescriptionRaw',
