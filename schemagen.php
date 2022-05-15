@@ -45,6 +45,15 @@ $application = new Application();
         $output->writeln("<info>Fetching schema releases data</info> - <comment>$schemaReleases</comment>");
         $schemaRelease = getSchemaVersion($schemaReleases);
 
+        // Fetch the tree.jsonld ref: https://schema.org/docs/developers.html
+        $schemaTree = SCHEMA_TREE;
+        $treeDest = dirname($outputDir) . '/' . TREE_FILE_NAME;
+        $output->writeln("<info>Fetching schema tree</info> - <comment>$schemaTree</comment>");
+        $tree = file_get_contents($schemaTree);
+        if ($tree) {
+            file_put_contents($treeDest, $tree);
+        }
+
         $output->writeln("<info>Fetching data source</info> - <comment>$source</comment>");
         $data = file_get_contents($source);
 
