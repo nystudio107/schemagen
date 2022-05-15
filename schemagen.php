@@ -168,9 +168,9 @@ $application = new Application();
                 $schemaDescription = wordwrap(getTextValue($classDef['rdfs:comment']), 75, "\n * ");
                 $schemaScope = getScope($schemaName);
 
-                $schemaInterfaces[] = $schemaClass . 'Interface';
-                $schemaTraitStatements[] = "    use {$schemaClass}Trait;";
+                // Add the schemaName itself as an ancestor so its properties, Trait, and Interface are included
                 $ancestors = [];
+                $ancestors[] = $schemaName;
                 loadAllAncestors($ancestors, $entityTree, $schemaName);
                 $ancestors = array_unique($ancestors);
 
