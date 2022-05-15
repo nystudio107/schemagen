@@ -25,6 +25,36 @@ function ensureDir(string $dir): void
 }
 
 /**
+ * Get the current schema release version from the GitHub API
+ *
+ * @param string $schemaReleases
+ * @return string
+ */
+function getSchemaVersion(string $schemaReleases): string
+{
+    $schemaRelease = 'latest';
+    // Per: https://stackoverflow.com/questions/37141315/file-get-contents-gets-403-from-api-github-com-every-time
+    $opts = [
+        'http' => [
+            'method' => 'GET',
+            'header' => [
+                'User-Agent: PHP'
+            ]
+        ]
+    ];
+    $context = stream_context_create($opts);
+    $data = file_get_contents($schemaReleases, false, $context);
+    if ($data) {
+        $data = json_decode($data);
+        if (is_array($data)) {
+            $schemaRelease = $data[0]->tag_name ?? 'latest';
+        }
+    }
+
+    return $schemaRelease;
+}
+
+/**
  * Given a schema name, generate a class name for the schema.
  *
  * @param string $schemaName

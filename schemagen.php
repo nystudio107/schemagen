@@ -40,27 +40,10 @@ $application = new Application();
             return Command::FAILURE;
         }
 
-        // Fetch the latest release name
-        $schemaRelease = 'latest';
-        $releases = SCHEMA_RELEASES;
-        $output->writeln("<info>Fetching releases data</info> - <comment>$releases</comment>");
-        // Per: https://stackoverflow.com/questions/37141315/file-get-contents-gets-403-from-api-github-com-every-time
-        $opts = [
-            'http' => [
-                'method' => 'GET',
-                'header' => [
-                    'User-Agent: PHP'
-                ]
-            ]
-        ];
-        $context = stream_context_create($opts);
-        $data = file_get_contents($releases, false, $context);
-        if ($data) {
-            $data = json_decode($data);
-            if (is_array($data)) {
-                $schemaRelease = $data[0]->tag_name ?? 'latest';
-            }
-        }
+        // Fetch the latest schema release name
+        $schemaReleases = SCHEMA_RELEASES;
+        $output->writeln("<info>Fetching schema releases data</info> - <comment>$schemaReleases</comment>");
+        $schemaRelease = getSchemaVersion($schemaReleases);
 
         $output->writeln("<info>Fetching data source</info> - <comment>$source</comment>");
         $data = file_get_contents($source);
