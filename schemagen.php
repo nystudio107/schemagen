@@ -116,8 +116,8 @@ $application = new Application();
                         break;
                     default:
                         if (substr($type, 0, 7) === 'schema:') {
-                            // Seems unneeded?
-                            $enums[$type][] = $entity;
+                            // Enums should be treated as classes, too
+                            $classes[$id] = $entity;
                         } else {
                             $output->writeln("<error>Cannot handle type $type");
                             return Command::FAILURE;
@@ -130,6 +130,7 @@ $application = new Application();
         // First pass to generate traits and create hierarchy tree
         $entityTree = [];
         $propertiesBySchemaName = [];
+
         foreach ($classes as $id => $classDef) {
             if (str_starts_with($id, 'schema:')) {
                 $schemaName = getTextValue($classDef['rdfs:label']);
@@ -159,6 +160,11 @@ $application = new Application();
                             $entityTree[$schemaName][] = $subClassOf;
                         }
                     }
+                }
+
+                if (!empty($classDef['@type']) && is_string($classDef['@type']) && str_starts_with($classDef['@type'], 'schema:')) {
+                    $subClassOf = substr($classDef['@type'], 7);
+                    $entityTree[$schemaName][] = $subClassOf;
                 }
             }
         }
