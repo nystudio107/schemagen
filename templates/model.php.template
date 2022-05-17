@@ -41,6 +41,13 @@ class {@schemaClass} extends MetaJsonLd implements {@schemaInterfaces}
     static public {@stringType}$schemaTypeScope = '{@schemaScope}';
 
     /**
+     * The Schema.org Type Extends
+     *
+     * @var string
+     */
+    static public {@stringType}$schemaTypeExtends = '{@schemaExtends}';
+
+    /**
      * The Schema.org Type Description
      *
      * @var string

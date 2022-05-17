@@ -189,6 +189,7 @@ $application = new Application();
                 loadAllAncestors($ancestors, $entityTree, $schemaName);
                 $ancestors = array_unique($ancestors);
 
+                $schemaExtends = $ancestors[1] ?? 'Thing';
                 // Include all ancestor traits
                 foreach ($ancestors as $ancestor) {
                     $schemaTraitStatements[] = '    use ' . getSchemaClassName($ancestor) . 'Trait;';
@@ -249,6 +250,7 @@ $application = new Application();
                         'schemaDescription',
                         'schemaDescriptionRaw',
                         'schemaScope',
+                        'schemaExtends',
                         'schemaClass',
                         'schemaTraitStatements',
                         'schemaInterfaces',
