@@ -19,9 +19,39 @@ function nukeDir(string $path): void
  */
 function ensureDir(string $dir): void
 {
-    if (!@mkdir($dir) && !is_dir($dir)) {
+    if (!@mkdir($dir, 0777, true) && !is_dir($dir)) {
         throw new \RuntimeException(sprintf('Directory "%s" was not created', $dir));
     }
+}
+
+/**
+ * Get the current schema release version from the GitHub API
+ *
+ * @param string $schemaReleases
+ * @return string
+ */
+function getSchemaVersion(string $schemaReleases): string
+{
+    $schemaRelease = 'latest';
+    // Per: https://stackoverflow.com/questions/37141315/file-get-contents-gets-403-from-api-github-com-every-time
+    $opts = [
+        'http' => [
+            'method' => 'GET',
+            'header' => [
+                'User-Agent: PHP'
+            ]
+        ]
+    ];
+    $context = stream_context_create($opts);
+    $data = file_get_contents($schemaReleases, false, $context);
+    if ($data) {
+        $data = json_decode($data);
+        if (is_array($data)) {
+            $schemaRelease = $data[0]->tag_name ?? 'latest';
+        }
+    }
+
+    return $schemaRelease;
 }
 
 /**
@@ -50,7 +80,7 @@ function makeField(array $propertyDef): string
 {
     $fieldData = compileFieldData($propertyDef);
     $fieldData['propertyDescription'] = wordwrap($fieldData['propertyDescription'], 75, "\n     * ");
-    return parseTemplate(file_get_contents(FIELD_TEMPLATE), $fieldData);
+    return parseTemplate(file_get_contents(getTemplatePath(FIELD_TEMPLATE)), $fieldData);
 }
 
 /**
@@ -67,13 +97,39 @@ function compileFieldData(array $propertyDef): array
     $propertyHandle = getTextValue($propertyDef['rdfs:label']) ?? '';
 
     $propertyTypesAsArray = [];
+    $propertyPhpTypesAsArray = [];
 
-    foreach ($propertyTypes as &$type) {
-        $type = substr($type['@id'], 7);
-        $propertyTypesAsArray[] = $type;
+    foreach ($propertyTypes as &$schemaType) {
+        $schemaType = substr($schemaType['@id'], 7);
+        switch ($schemaType) {
+            case 'Text':
+            case 'Url':
+            $phpType = 'string';
+                break;
+            case 'Integer':
+                $phpType = 'int';
+                break;
+            case 'Number':
+            case 'Float':
+            $phpType = 'float';
+                break;
+            case 'Boolean':
+                $phpType = 'bool';
+                break;
+            default:
+                $phpType = '';
+                break;
+        }
+        $propertyTypesAsArray[] = $schemaType;
+        $propertyPhpTypesAsArray[] = $phpType;
     }
 
-    $propertyType = implode('|', $propertyTypes);
+    $propertyPhpTypesAsArray = array_merge(
+        array_filter($propertyPhpTypesAsArray),
+        $propertyTypesAsArray,
+    );
+
+    $propertyType = implode('|', $propertyPhpTypesAsArray);
 
     return compact(
         'propertyDescription',
@@ -84,13 +140,43 @@ function compileFieldData(array $propertyDef): array
 }
 
 /**
+ * Return the path to the template based on the current CRAFT_VERSION
+ *
+ * @param string $template
+ * @return string
+ */
+function getTemplatePath(string $template): string
+{
+    return TEMPLATES_DIR . '/' . $template;
+}
+
+function makeInterface(string $schemaName, string $schemaRelease, string $craftVersion): string
+{
+    $schemaInterfaceName = $schemaName . 'Interface';
+    $namespace = MODEL_NAMESPACE;
+    $schemaScope = getScope($schemaName);
+    $currentYear = date("Y");
+
+    return parseTemplate(file_get_contents(getTemplatePath(INTERFACE_TEMPLATE)), compact(
+            'schemaName',
+            'namespace',
+            'craftVersion',
+            'currentYear',
+            'schemaScope',
+            'schemaInterfaceName',
+            'schemaRelease',
+        )
+    );
+}
+
+/**
  * Make the trait.
  *
  * @param string $schemaName
  * @param array $properties
  * @return string
  */
-function makeTrait(string $schemaName, array $properties): string
+function makeTrait(string $schemaName, array $properties, string $schemaRelease, string $craftVersion): string
 {
     $fields = [];
 
@@ -99,21 +185,22 @@ function makeTrait(string $schemaName, array $properties): string
     }
 
     $schemaPropertiesAsFields = implode("", $fields);
-    $craftVersion = CRAFT_VERSION;
-    $currentYear = CURRENT_YEAR;
+    $currentYear = date("Y");
     $namespace = MODEL_NAMESPACE;
     $schemaScope = getScope($schemaName);
     $schemaTraitName = $schemaName . 'Trait';
 
 
-    return parseTemplate(file_get_contents(TRAIT_TEMPLATE), compact(
+    return parseTemplate(file_get_contents(getTemplatePath(TRAIT_TEMPLATE)), compact(
             'schemaPropertiesAsFields',
             'schemaName',
-            'craftVersion',
-            'currentYear',
             'namespace',
+            'currentYear',
+            'craftVersion',
             'schemaScope',
-            'schemaTraitName')
+            'schemaTraitName',
+            'schemaRelease',
+       )
     );
 }
 
@@ -151,12 +238,11 @@ function getScope(string $schemaName): string
 /**
  * Save a generated file.
  *
- * @param string $fileName
+ * @param string $path
  * @param string $content
  */
-function saveGeneratedFile(string $fileName, string $content): void
+function saveGeneratedFile(string $path, string $content): void
 {
-    $path = OUTPUT_FOLDER . $fileName;
     file_put_contents($path, $content);
 }
 
@@ -218,10 +304,11 @@ function getTextValue(mixed $fieldValue, bool $removeBreaks = true): string
     if (is_array($fieldValue)) {
         $fieldValue = $fieldValue['@value'];
     }
-
+    $fieldValue = html_entity_decode($fieldValue);
     if ($removeBreaks) {
-        $fieldValue = str_replace(array('<br />', "\n"), ' ', $fieldValue);
+        $fieldValue = str_replace(['<br />', '\n', "\n"], ' ', $fieldValue);
     }
+
     return $fieldValue;
 }
 

@@ -13,14 +13,12 @@ namespace {@namespace};
 
 /**
  * schema.org version: {@schemaRelease}
- * Trait for {@schemaName}.
+ * Interface for {@schemaName}
  *
  * @author    nystudio107
  * @package   Seomatic
  * @see       {@schemaScope}
  */
-
-trait {@schemaTraitName}
+interface {@schemaInterfaceName}
 {
-    {@schemaPropertiesAsFields}
 }

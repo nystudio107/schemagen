@@ -14,14 +14,14 @@ namespace {@namespace};
 use nystudio107\seomatic\models\MetaJsonLd;
 
 /**
+ * schema.org version: {@schemaRelease}
  * {@schemaName} - {@schemaDescription}
  *
  * @author    nystudio107
  * @package   Seomatic
- * @since     4.0.0
-* @see       {@schemaScope}
+ * @see       {@schemaScope}
  */
-class {@schemaClass} extends MetaJsonLd
+class {@schemaClass} extends MetaJsonLd implements {@schemaInterfaces}
 {
     // Static Public Properties
     // =========================================================================
@@ -31,21 +31,28 @@ class {@schemaClass} extends MetaJsonLd
      *
      * @var string
      */
-    static public string $schemaTypeName = '{@schemaName}';
+    static public {@stringType}$schemaTypeName = '{@schemaName}';
 
     /**
      * The Schema.org Type Scope
      *
      * @var string
      */
-    static public string $schemaTypeScope = '{@schemaScope}';
+    static public {@stringType}$schemaTypeScope = '{@schemaScope}';
+
+    /**
+     * The Schema.org Type Extends
+     *
+     * @var string
+     */
+    static public {@stringType}$schemaTypeExtends = '{@schemaExtends}';
 
     /**
      * The Schema.org Type Description
      *
      * @var string
      */
-    static public string $schemaTypeDescription = <<<SCHEMADESC
+    static public {@stringType}$schemaTypeDescription = <<<SCHEMADESC
 {@schemaDescriptionRaw}
 SCHEMADESC;
 

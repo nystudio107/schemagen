@@ -25,10 +25,11 @@ $application = new Application();
     ->addArgument('source', InputArgument::OPTIONAL, 'The data source URL or file location')
     ->addArgument('outputDir', InputArgument::OPTIONAL, 'The output directory')
     ->addOption('skipSuperseded', 's', InputOption::VALUE_OPTIONAL, 'Whether superseded entities should be skipped', false)
+    ->addOption('craft-version', 'c', InputOption::VALUE_OPTIONAL, 'Craft version to generate the models for. Defaults to 3.', 3)
     ->setCode(function (InputInterface $input, OutputInterface $output) {
-        $source = $input->getArgument('source') ?? 'https://schema.org/version/latest/schemaorg-current-https.jsonld';
-        $outputDir = $input->getArgument('outputDir') ?? 'output';
-
+        $source = $input->getArgument('source') ?? SCHEMA_SOURCE;
+        $outputDir = $input->getArgument('outputDir') ?? OUTPUT_DIR;
+        $craftVersion = (int)($input->getOption('craft-version') ?? 3);
 
         // ensure output folders exist
         try {
@@ -37,6 +38,20 @@ $application = new Application();
         } catch (RuntimeException $exception) {
             $output->writeln("<error>{$exception->getMessage()}</error>");
             return Command::FAILURE;
+        }
+
+        // Fetch the latest schema release name
+        $schemaReleases = SCHEMA_RELEASES;
+        $output->writeln("<info>Fetching schema releases data</info> - <comment>$schemaReleases</comment>");
+        $schemaRelease = getSchemaVersion($schemaReleases);
+
+        // Fetch the tree.jsonld ref: https://schema.org/docs/developers.html
+        $schemaTree = SCHEMA_TREE;
+        $treeDest = dirname($outputDir) . '/' . TREE_FILE_NAME;
+        $output->writeln("<info>Fetching schema tree</info> - <comment>$schemaTree</comment>");
+        $tree = file_get_contents($schemaTree);
+        if ($tree) {
+            file_put_contents($treeDest, $tree);
         }
 
         $output->writeln("<info>Fetching data source</info> - <comment>$source</comment>");
@@ -101,8 +116,8 @@ $application = new Application();
                         break;
                     default:
                         if (substr($type, 0, 7) === 'schema:') {
-                            // Seems unneeded?
-                            $enums[$type][] = $entity;
+                            // Enums should be treated as classes, too
+                            $classes[$id] = $entity;
                         } else {
                             $output->writeln("<error>Cannot handle type $type");
                             return Command::FAILURE;
@@ -115,15 +130,19 @@ $application = new Application();
         // First pass to generate traits and create hierarchy tree
         $entityTree = [];
         $propertiesBySchemaName = [];
+
         foreach ($classes as $id => $classDef) {
             if (str_starts_with($id, 'schema:')) {
                 $schemaName = getTextValue($classDef['rdfs:label']);
                 $schemaClass = getSchemaClassName($schemaName);
                 $schemaTraitName = $schemaClass . 'Trait';
+                $schemaInterfaceName = $schemaClass . 'Interface';
                 $propertiesBySchemaName[$schemaName] = $properties[$id] ?? [];
 
-                $trait = makeTrait($schemaClass, $properties[$id] ?? []);
-                saveGeneratedFile($schemaTraitName . '.php', $trait);
+                $trait = makeTrait($schemaClass, $properties[$id] ?? [], $schemaRelease, $craftVersion);
+                saveGeneratedFile($outputDir . $schemaTraitName . '.php', $trait);
+                $interface = makeInterface($schemaClass, $schemaRelease, $craftVersion);
+                saveGeneratedFile($outputDir . $schemaInterfaceName . '.php', $interface);
 
                 $entityTree[$schemaName] = [];
 
@@ -142,6 +161,11 @@ $application = new Application();
                         }
                     }
                 }
+
+                if (!empty($classDef['@type']) && is_string($classDef['@type']) && str_starts_with($classDef['@type'], 'schema:')) {
+                    $subClassOf = substr($classDef['@type'], 7);
+                    $entityTree[$schemaName][] = $subClassOf;
+                }
             }
         }
 
@@ -151,6 +175,7 @@ $application = new Application();
         foreach ($classes as $id => $classDef) {
             if (str_starts_with($id, 'schema:')) {
                 $schemaTraitStatements = [];
+                $schemaInterfaces = [];
 
                 $schemaName = getTextValue($classDef['rdfs:label']);
                 $schemaClass = getSchemaClassName($schemaName);
@@ -158,14 +183,17 @@ $application = new Application();
                 $schemaDescription = wordwrap(getTextValue($classDef['rdfs:comment']), 75, "\n * ");
                 $schemaScope = getScope($schemaName);
 
-                $schemaTraitStatements[] = "    use {$schemaClass}Trait;";
+                // Add the schemaName itself as an ancestor so its properties, Trait, and Interface are included
                 $ancestors = [];
+                $ancestors[] = $schemaName;
                 loadAllAncestors($ancestors, $entityTree, $schemaName);
                 $ancestors = array_unique($ancestors);
 
+                $schemaExtends = $ancestors[1] ?? 'Thing';
                 // Include all ancestor traits
                 foreach ($ancestors as $ancestor) {
                     $schemaTraitStatements[] = '    use ' . getSchemaClassName($ancestor) . 'Trait;';
+                    $schemaInterfaces[] = getSchemaClassName($ancestor) . 'Interface';
                 }
 
                 // Load google field information
@@ -206,21 +234,27 @@ $application = new Application();
                 $schemaPropertyExpectedTypesAsArray .= implode(",\n", $schemaPropertyTypes) . "\n        ]";
                 $schemaPropertyDescriptionsAsArray .= implode(",\n", $schemaPropertyDescriptions) . "\n        ]";
 
-                $craftVersion = CRAFT_VERSION;
-                $currentYear = CURRENT_YEAR;
+                $currentYear = date("Y");
                 $namespace = MODEL_NAMESPACE;
                 $schemaTraitStatements = implode("\n", $schemaTraitStatements);
+                $schemaInterfaces = implode(", ", $schemaInterfaces);
 
-                $model = parseTemplate(file_get_contents(MODEL_TEMPLATE), compact(
-                        'craftVersion',
+                $stringType = $craftVersion === 3 ? '' : 'string ';
+
+                $model = parseTemplate(file_get_contents(getTemplatePath(MODEL_TEMPLATE)), compact(
+                        'stringType',
                         'currentYear',
                         'namespace',
+                        'craftVersion',
                         'schemaName',
                         'schemaDescription',
                         'schemaDescriptionRaw',
                         'schemaScope',
+                        'schemaExtends',
                         'schemaClass',
                         'schemaTraitStatements',
+                        'schemaInterfaces',
+                        'schemaRelease',
                         'googleRequiredSchemaAsArray',
                         'googleRecommendedSchemaAsArray',
                         'schemaPropertyExpectedTypesAsArray',
@@ -228,7 +262,7 @@ $application = new Application();
                     )
                 );
 
-                saveGeneratedFile($schemaClass . '.php', $model);
+                saveGeneratedFile($outputDir . $schemaClass . '.php', $model);
             }
         }
 
