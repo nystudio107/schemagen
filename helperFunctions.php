@@ -1,5 +1,8 @@
 <?php
 
+use Nette\PhpGenerator\ClassLike;
+use Nette\PhpGenerator\PhpFile;
+
 function nukeDir(string $path): void
 {
     if (file_exists($path)) {
@@ -62,25 +65,12 @@ function getSchemaVersion(string $schemaReleases): string
  */
 function getSchemaClassName(string $schemaName): string
 {
-    if (!preg_match('/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/', $schemaName) || strtolower($schemaName) === 'class') {
+    $invalidClassnames = ['class','false', 'true', 'float'];
+    if (!preg_match('/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/', $schemaName) || in_array(strtolower($schemaName), $invalidClassnames, true)) {
         return 'Schema' . $schemaName;
     }
 
     return $schemaName;
-}
-
-/**
- * Generate PHP code for a class field based on a property definition. If
- *
- * @param array $propertyDef
- * @param
- * @return string
- */
-function makeField(array $propertyDef): string
-{
-    $fieldData = compileFieldData($propertyDef);
-    $fieldData['propertyDescription'] = wordwrap($fieldData['propertyDescription'], 75, "\n     * ");
-    return parseTemplate(file_get_contents(getTemplatePath(FIELD_TEMPLATE)), $fieldData);
 }
 
 /**
@@ -139,34 +129,18 @@ function compileFieldData(array $propertyDef): array
     );
 }
 
-/**
- * Return the path to the template based on the current CRAFT_VERSION
- *
- * @param string $template
- * @return string
- */
-function getTemplatePath(string $template): string
-{
-    return TEMPLATES_DIR . '/' . $template;
-}
-
-function makeInterface(string $schemaName, string $schemaRelease, string $craftVersion): string
+function printInterfaceFile(string $schemaName, string $schemaRelease, string $craftVersion): string
 {
     $schemaInterfaceName = $schemaName . 'Interface';
-    $namespace = MODEL_NAMESPACE;
     $schemaScope = getScope($schemaName);
-    $currentYear = date("Y");
 
-    return parseTemplate(file_get_contents(getTemplatePath(INTERFACE_TEMPLATE)), compact(
-            'schemaName',
-            'namespace',
-            'craftVersion',
-            'currentYear',
-            'schemaScope',
-            'schemaInterfaceName',
-            'schemaRelease',
-        )
-    );
+    $file = createFileWithHeader($craftVersion);
+    $interface = $file->addInterface(MODEL_NAMESPACE . '\\' . $schemaInterfaceName);
+    $interface->addComment("schema.org version: $schemaRelease")
+        ->addComment("Interface for $schemaName.\n");
+    decorateWithPackageInfo($interface, $schemaScope);
+
+    return (new Nette\PhpGenerator\PsrPrinter)->printFile($file);
 }
 
 /**
@@ -176,32 +150,33 @@ function makeInterface(string $schemaName, string $schemaRelease, string $craftV
  * @param array $properties
  * @return string
  */
-function makeTrait(string $schemaName, array $properties, string $schemaRelease, string $craftVersion): string
+function printTraitFile(string $schemaName, array $properties, string $schemaRelease, string $craftVersion): string
 {
-    $fields = [];
-
-    foreach ($properties as $propertyDef) {
-        $fields[] = makeField($propertyDef);
+    foreach ($properties as &$fieldDef) {
+        $fieldDef = compileFieldData($fieldDef);
+        $fieldDef['propertyDescription'] = wordwrap($fieldDef['propertyDescription']);
     }
+    unset($fieldDef);
 
-    $schemaPropertiesAsFields = implode("", $fields);
-    $currentYear = date("Y");
-    $namespace = MODEL_NAMESPACE;
     $schemaScope = getScope($schemaName);
     $schemaTraitName = $schemaName . 'Trait';
 
+    $file = createFileWithHeader($craftVersion);
 
-    return parseTemplate(file_get_contents(getTemplatePath(TRAIT_TEMPLATE)), compact(
-            'schemaPropertiesAsFields',
-            'schemaName',
-            'namespace',
-            'currentYear',
-            'craftVersion',
-            'schemaScope',
-            'schemaTraitName',
-            'schemaRelease',
-       )
-    );
+    $trait = $file->addTrait(MODEL_NAMESPACE . '\\' . $schemaTraitName);
+    $trait->addComment("schema.org version: $schemaRelease")
+        ->addComment("Trait for $schemaName.\n");
+
+    decorateWithPackageInfo($trait, $schemaScope);
+
+    foreach ($properties as $fieldDef) {
+        $trait->addProperty($fieldDef['propertyHandle'])
+            ->setPublic()
+            ->addComment($fieldDef['propertyDescription'] . "\n")
+            ->addComment("@var {$fieldDef['propertyType']}");
+    }
+
+    return (new Nette\PhpGenerator\PsrPrinter)->printFile($file);
 }
 
 /**
@@ -333,4 +308,31 @@ function wrapValuesInSingleQuotes(array $array): array
     });
 
     return $array;
+}
+
+/**
+ * @param string $craftVersion
+ * @return PhpFile
+ */
+function createFileWithHeader(string $craftVersion): PhpFile
+{
+    $currentYear = date("Y");
+    $file = new Nette\PhpGenerator\PhpFile;
+    $file->addComment("SEOmatic plugin for Craft CMS $craftVersion\n")
+        ->addComment("A turnkey SEO implementation for Craft CMS that is comprehensive, powerful, and flexible\n")
+        ->addComment('@link      https://nystudio107.com')
+        ->addComment("@copyright Copyright (c) $currentYear nystudio107");
+    return $file;
+}
+
+/**
+ * @param ClassLike $classLike
+ * @param string $schemaScope
+ */
+function decorateWithPackageInfo(ClassLike $classLike, string $schemaScope)
+{
+    $classLike
+        ->addComment('@author    nystudio107')
+        ->addComment('@package   Seomatic')
+        ->addComment("@see       $schemaScope");
 }
