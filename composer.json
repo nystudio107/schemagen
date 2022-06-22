@@ -1,7 +1,7 @@
 {
     "name": "nystudio107/schemagen",
     "description": "Generates PHP models representing schema.org JSON-LD types",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "keywords": [
         "craft",
         "cms",
@@ -21,6 +21,7 @@
     "require": {
         "symfony/console": "^6.0",
         "symfony/serializer": "^6.0",
-        "symfony/property-access": "^6.0"
+        "symfony/property-access": "^6.0",
+        "nette/php-generator": "^4.0"
     }
 }

@@ -5,6 +5,7 @@ require __DIR__ . '/vendor/autoload.php';
 require 'config.php';
 require 'helperFunctions.php';
 
+use Nette\PhpGenerator\Printer;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -29,7 +30,7 @@ $application = new Application();
     ->setCode(function (InputInterface $input, OutputInterface $output) {
         $source = $input->getArgument('source') ?? SCHEMA_SOURCE;
         $outputDir = $input->getArgument('outputDir') ?? OUTPUT_DIR;
-        $craftVersion = (int)($input->getOption('craft-version') ?? 3);
+        $craftVersion = ($input->getOption('craft-version') ?? '3.x');
 
         // ensure output folders exist
         try {
@@ -139,9 +140,9 @@ $application = new Application();
                 $schemaInterfaceName = $schemaClass . 'Interface';
                 $propertiesBySchemaName[$schemaName] = $properties[$id] ?? [];
 
-                $trait = makeTrait($schemaClass, $properties[$id] ?? [], $schemaRelease, $craftVersion);
+                $trait = printTraitFile($schemaClass, $properties[$id] ?? [], $schemaRelease, $craftVersion);
                 saveGeneratedFile($outputDir . $schemaTraitName . '.php', $trait);
-                $interface = makeInterface($schemaClass, $schemaRelease, $craftVersion);
+                $interface = printInterfaceFile($schemaClass, $schemaRelease, $craftVersion);
                 saveGeneratedFile($outputDir . $schemaInterfaceName . '.php', $interface);
 
                 $entityTree[$schemaName] = [];
@@ -174,13 +175,13 @@ $application = new Application();
         // Loop again, now with all the traits generated and relations known.
         foreach ($classes as $id => $classDef) {
             if (str_starts_with($id, 'schema:')) {
-                $schemaTraitStatements = [];
+                $schemaTraits = [];
                 $schemaInterfaces = [];
 
                 $schemaName = getTextValue($classDef['rdfs:label']);
                 $schemaClass = getSchemaClassName($schemaName);
                 $schemaDescriptionRaw = rtrim(getTextValue($classDef['rdfs:comment'], false), "\n");
-                $schemaDescription = wordwrap(getTextValue($classDef['rdfs:comment']), 75, "\n * ");
+                $schemaDescription = wordwrap(getTextValue($classDef['rdfs:comment']));
                 $schemaScope = getScope($schemaName);
 
                 // Add the schemaName itself as an ancestor so its properties, Trait, and Interface are included
@@ -190,9 +191,10 @@ $application = new Application();
                 $ancestors = array_unique($ancestors);
 
                 $schemaExtends = $ancestors[1] ?? 'Thing';
+
                 // Include all ancestor traits
                 foreach ($ancestors as $ancestor) {
-                    $schemaTraitStatements[] = '    use ' . getSchemaClassName($ancestor) . 'Trait;';
+                    $schemaTraits[] = getSchemaClassName($ancestor) . 'Trait';
                     $schemaInterfaces[] = getSchemaClassName($ancestor) . 'Interface';
                 }
 
@@ -227,40 +229,110 @@ $application = new Application();
                     $types = wrapValuesInSingleQuotes($fieldData['propertyTypesAsArray']);
                     $description = str_replace("'", '\\\'', $fieldData['propertyDescription']);
 
-                    $schemaPropertyTypes[] = "            '" . $fieldData['propertyHandle'] . "' => [" . implode(', ', $types) . "]";
-                    $schemaPropertyDescriptions[] = "            '" . $fieldData['propertyHandle'] . "' => '" . $description . "'";
+                    $schemaPropertyTypes[] = "    '" . $fieldData['propertyHandle'] . "' => [" . implode(', ', $types) . "]";
+                    $schemaPropertyDescriptions[] = "    '" . $fieldData['propertyHandle'] . "' => '" . $description . "'";
                 }
 
-                $schemaPropertyExpectedTypesAsArray .= implode(",\n", $schemaPropertyTypes) . "\n        ]";
-                $schemaPropertyDescriptionsAsArray .= implode(",\n", $schemaPropertyDescriptions) . "\n        ]";
+                $schemaPropertyExpectedTypesAsArray .= implode(",\n", $schemaPropertyTypes) . "\n]";
+                $schemaPropertyDescriptionsAsArray .= implode(",\n", $schemaPropertyDescriptions) . "\n]";
 
-                $currentYear = date("Y");
-                $namespace = MODEL_NAMESPACE;
-                $schemaTraitStatements = implode("\n", $schemaTraitStatements);
-                $schemaInterfaces = implode(", ", $schemaInterfaces);
+                $file = createFileWithHeader($craftVersion);
+                $file->addNamespace(MODEL_NAMESPACE)
+                    ->addUse(PARENT_MODEL);
 
-                $stringType = $craftVersion === 3 ? '' : 'string ';
+                $class = $file->addClass(MODEL_NAMESPACE . '\\' . $schemaClass);
+                $class->addComment("schema.org version: $schemaRelease")
+                    ->addComment("$schemaName - $schemaDescription\n");
+                decorateWithPackageInfo($class, $schemaScope);
 
-                $model = parseTemplate(file_get_contents(getTemplatePath(MODEL_TEMPLATE)), compact(
-                        'stringType',
-                        'currentYear',
-                        'namespace',
-                        'craftVersion',
-                        'schemaName',
-                        'schemaDescription',
-                        'schemaDescriptionRaw',
-                        'schemaScope',
-                        'schemaExtends',
-                        'schemaClass',
-                        'schemaTraitStatements',
-                        'schemaInterfaces',
-                        'schemaRelease',
-                        'googleRequiredSchemaAsArray',
-                        'googleRecommendedSchemaAsArray',
-                        'schemaPropertyExpectedTypesAsArray',
-                        'schemaPropertyDescriptionsAsArray'
-                    )
-                );
+                $class->setExtends(PARENT_MODEL);
+
+                foreach ($schemaInterfaces as $schemaInterface) {
+                    $class->addImplement(MODEL_NAMESPACE . '\\' . $schemaInterface);
+                }
+
+                $properties = [];
+                $properties[] = $class->addProperty('schemaTypeName', $schemaName)
+                    ->setStatic()
+                    ->setPublic()
+                    ->addComment("The Schema.org Type Name\n")
+                    ->addComment('@var string');
+
+                $properties[] = $class->addProperty('schemaTypeScope', $schemaScope)
+                    ->setStatic()
+                    ->setPublic()
+                    ->addComment("The Schema.org Type Scope\n")
+                    ->addComment('@var string');
+
+                $properties[] = $class->addProperty('schemaTypeExtends', $schemaExtends)
+                    ->setStatic()
+                    ->setPublic()
+                    ->addComment("The Schema.org Type Extends\n")
+                    ->addComment('@var string');
+
+                $properties[] = $class->addProperty('schemaTypeDescription', $schemaDescriptionRaw)
+                    ->setStatic()
+                    ->setPublic()
+                    ->addComment("The Schema.org Type Description\n")
+                    ->addComment('@var string');
+
+                if ($craftVersion !== 3) {
+                    foreach ($properties as $property) {
+                        $property->setType('string');
+                    }
+                }
+
+                foreach ($schemaTraits as $schemaTrait) {
+                    $class->addTrait(MODEL_NAMESPACE . '\\' . $schemaTrait);
+                }
+
+                $class->addMethod('getSchemaPropertyNames')
+                    ->addComment('@inheritdoc')
+                    ->setPublic()
+                    ->setReturnType('array')
+                    ->setBody('return array_keys($this->getSchemaPropertyExpectedTypes());');
+
+                $class->addMethod('getSchemaPropertyExpectedTypes')
+                    ->addComment('@inheritdoc')
+                    ->setPublic()
+                    ->setReturnType('array')
+                    ->setBody("return $schemaPropertyExpectedTypesAsArray;");
+
+                $class->addMethod('getSchemaPropertyDescriptions')
+                    ->addComment('@inheritdoc')
+                    ->setPublic()
+                    ->setReturnType('array')
+                    ->setBody("return $schemaPropertyDescriptionsAsArray;");
+
+                $class->addMethod('getGoogleRequiredSchema')
+                    ->addComment('@inheritdoc')
+                    ->setPublic()
+                    ->setReturnType('array')
+                    ->setBody("return $googleRequiredSchemaAsArray;");
+
+                $class->addMethod('getGoogleRecommendedSchema')
+                    ->addComment('@inheritdoc')
+                    ->setPublic()
+                    ->setReturnType('array')
+                    ->setBody("return $googleRecommendedSchemaAsArray;");
+
+                $class->addMethod('defineRules')
+                    ->addComment('@inheritdoc')
+                    ->setPublic()
+                    ->setReturnType('array')
+                    ->setBody(<<<'METHOD'
+                        $rules = parent::defineRules();
+                        $rules = array_merge($rules, [
+                            [$this->getSchemaPropertyNames(), 'validateJsonSchema'],
+                            [$this->getGoogleRequiredSchema(), 'required', 'on' => ['google'], 'message' => 'This property is required by Google.'],
+                            [$this->getGoogleRecommendedSchema(), 'required', 'on' => ['google'], 'message' => 'This property is recommended by Google.']
+                        ]);
+                    
+                        return $rules;
+                    METHOD
+                    );
+
+                $model = (new Printer())->printFile($file);
 
                 saveGeneratedFile($outputDir . $schemaClass . '.php', $model);
             }
