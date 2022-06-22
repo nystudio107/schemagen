@@ -180,26 +180,6 @@ function printTraitFile(string $schemaName, array $properties, string $schemaRel
 }
 
 /**
- * Parse a template using an array of variables.
- *
- * @param string $template
- * @param array $variables
- *
- * @return string
- */
-function parseTemplate(string $template, array $variables): string
-{
-    $output = $template;
-    foreach ($variables as $key => $value) {
-        if (!is_array($value)) {
-            $output = str_replace('{@' . $key . '}', $value, $output);
-        }
-    }
-
-    return $output;
-}
-
-/**
  * Get the scope URL for a given schema name.
  *
  * @param string $schemaName

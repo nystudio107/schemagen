@@ -190,6 +190,8 @@ $application = new Application();
                 loadAllAncestors($ancestors, $entityTree, $schemaName);
                 $ancestors = array_unique($ancestors);
 
+                $schemaExtends = $ancestors[1] ?? 'Thing';
+
                 // Include all ancestor traits
                 foreach ($ancestors as $ancestor) {
                     $schemaTraits[] = getSchemaClassName($ancestor) . 'Trait';
@@ -260,6 +262,12 @@ $application = new Application();
                     ->setStatic()
                     ->setPublic()
                     ->addComment("The Schema.org Type Scope\n")
+                    ->addComment('@var string');
+
+                $properties[] = $class->addProperty('schemaTypeExtends', $schemaExtends)
+                    ->setStatic()
+                    ->setPublic()
+                    ->addComment("The Schema.org Type Extends\n")
                     ->addComment('@var string');
 
                 $properties[] = $class->addProperty('schemaTypeDescription', $schemaDescriptionRaw)
