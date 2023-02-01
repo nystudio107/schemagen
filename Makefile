@@ -1,4 +1,4 @@
-TAG?=8.1-rc-cli-alpine3.15
+TAG?=8.1-rc-cli-alpine3.17
 CONTAINER?=$(shell basename $(CURDIR))-container
 IMAGE_INFO=$(shell docker image inspect $(CONTAINER):$(TAG))
 IMAGE_NAME=${CONTAINER}:${TAG}
