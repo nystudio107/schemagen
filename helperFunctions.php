@@ -23,7 +23,7 @@ function nukeDir(string $path): void
 function ensureDir(string $dir): void
 {
     if (!@mkdir($dir, 0777, true) && !is_dir($dir)) {
-        throw new \RuntimeException(sprintf('Directory "%s" was not created', $dir));
+        throw new RuntimeException(sprintf('Directory "%s" was not created', $dir));
     }
 }
 
@@ -65,7 +65,7 @@ function getSchemaVersion(string $schemaReleases): string
  */
 function getSchemaClassName(string $schemaName): string
 {
-    $invalidClassnames = ['class','false', 'true', 'float'];
+    $invalidClassnames = ['class', 'false', 'true', 'float'];
     if (!preg_match('/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/', $schemaName) || in_array(strtolower($schemaName), $invalidClassnames, true)) {
         return 'Schema' . $schemaName;
     }
@@ -94,14 +94,14 @@ function compileFieldData(array $propertyDef): array
         switch ($schemaType) {
             case 'Text':
             case 'Url':
-            $phpType = 'string';
+                $phpType = 'string';
                 break;
             case 'Integer':
                 $phpType = 'int';
                 break;
             case 'Number':
             case 'Float':
-            $phpType = 'float';
+                $phpType = 'float';
                 break;
             case 'Boolean':
                 $phpType = 'bool';
