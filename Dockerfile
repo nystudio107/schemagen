@@ -1,4 +1,4 @@
-ARG TAG=8.1-rc-cli-alpine3.15
+ARG TAG=8.1-rc-cli-alpine3.17
 FROM php:$TAG
 
 # Install packages
