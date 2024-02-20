@@ -23,9 +23,17 @@ image-check:
 ifeq ($(IMAGE_INFO), [])
 image-check: image-build
 endif
+# Check the code with ECS
+ecs: image-check
+	${DOCKER_RUN} --name ${CONTAINER}-$@ ${IMAGE_NAME} vendor/bin/ecs \
+		$(filter-out $@,$(MAKECMDGOALS)) $(MAKEFLAGS)
+# Check the code with phpstan
+phpstan: image-check
+	${DOCKER_RUN} --name ${CONTAINER}-$@ ${IMAGE_NAME} vendor/bin/phpstan --memory-limit=1G \
+		$(filter-out $@,$(MAKECMDGOALS)) $(MAKEFLAGS)
 # Run schemagen inside the container with the passed in args
 schemagen: image-check
-	${DOCKER_RUN} --name ${CONTAINER}-$@ ${IMAGE_NAME} php schemagen.php $(filter-out $@,$(MAKECMDGOALS)) $(MAKEFLAGS)
+	${DOCKER_RUN} --name ${CONTAINER}-$@ ${IMAGE_NAME} php src/schemagen.php $(filter-out $@,$(MAKECMDGOALS)) $(MAKEFLAGS)
 %:
 	@:
 # ref: https://stackoverflow.com/questions/6273608/how-to-pass-argument-to-makefile-from-command-line

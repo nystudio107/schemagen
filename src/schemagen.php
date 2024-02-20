@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 require 'config.php';
 require 'helperFunctions.php';
 
@@ -27,10 +27,10 @@ $application = new Application();
     ->addArgument('outputDir', InputArgument::OPTIONAL, 'The output directory')
     ->addOption('skipSuperseded', 's', InputOption::VALUE_OPTIONAL, 'Whether superseded entities should be skipped', false)
     ->addOption('craft-version', 'c', InputOption::VALUE_OPTIONAL, 'Craft version to generate the models for. Defaults to 3.', 3)
-    ->setCode(function (InputInterface $input, OutputInterface $output) {
+    ->setCode(function(InputInterface $input, OutputInterface $output) {
         $source = $input->getArgument('source') ?? SCHEMA_SOURCE;
         $outputDir = $input->getArgument('outputDir') ?? OUTPUT_DIR;
-        $craftVersion = ($input->getOption('craft-version') ?? '3.x');
+        $craftVersion = ($input->getOption('craft-version') ?? 3);
 
         // ensure output folders exist
         try {
@@ -140,9 +140,9 @@ $application = new Application();
                 $schemaInterfaceName = $schemaClass . 'Interface';
                 $propertiesBySchemaName[$schemaName] = $properties[$id] ?? [];
 
-                $trait = printTraitFile($schemaClass, $properties[$id] ?? [], $schemaRelease, $craftVersion);
+                $trait = printTraitFile($schemaClass, $properties[$id] ?? [], $schemaRelease);
                 saveGeneratedFile($outputDir . $schemaTraitName . '.php', $trait);
-                $interface = printInterfaceFile($schemaClass, $schemaRelease, $craftVersion);
+                $interface = printInterfaceFile($schemaClass, $schemaRelease);
                 saveGeneratedFile($outputDir . $schemaInterfaceName . '.php', $interface);
 
                 $entityTree[$schemaName] = [];
@@ -236,7 +236,7 @@ $application = new Application();
                 $schemaPropertyExpectedTypesAsArray .= implode(",\n", $schemaPropertyTypes) . "\n]";
                 $schemaPropertyDescriptionsAsArray .= implode(",\n", $schemaPropertyDescriptions) . "\n]";
 
-                $file = createFileWithHeader($craftVersion);
+                $file = createFileWithHeader();
                 $file->addNamespace(MODEL_NAMESPACE)
                     ->addUse(PARENT_MODEL);
 

@@ -1,4 +1,5 @@
 <?php
+
 const SCHEMA_SOURCE = 'https://schema.org/version/latest/schemaorg-current-https.jsonld';
 const SCHEMA_TREE = 'https://schema.org/docs/tree.jsonld';
 const TREE_FILE_NAME = 'tree.jsonld';

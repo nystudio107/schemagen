@@ -25,6 +25,8 @@ This project uses Docker to shrink-wrap the devops it needs to run around the pr
 To make using it easier, we're using a Makefile and the built-in `make` utility to create local aliases. You can run the following from terminal in the project directory:
 
 - `make clean` - removes the `output/` & `vendor/` directories, as well as the `composer.lock` file
+- `make ecs xxx` - runs [Easy Coding Standard](https://github.com/symplify/easy-coding-standard) using the [Craft CMS ECS config](https://github.com/craftcms/ecs), e.g.: `make ecs`. To automatically fix, add the `--fix` flag, e.g.: `make -- ecs --fix`. Additional settings are available in the `ecs.php` file
+- `make phpstan xxx` - runs [PHPStan](https://github.com/phpstan/phpstan) using the [Craft CMS PHPStan config](https://github.com/craftcms/phpstan), e.g.: `make phpstan`. Additional settings are available in the `phpstan.neon` file
 - `make schemagen` - installs the Composer packages as needed, then generates all of the schema.org PHP JSON-LD models to the `output/` directory
 
 Additional arguments can be passed into the `make schemagen` command:
@@ -41,7 +43,7 @@ Additional options can be passed into the `make schemagen` command:
 - `-c X` - The Craft version to generate the models for. Defaults to 3. e.g.: `make schemagen -- -c 4`
 - `-s` command line option that can be used, which controls whether superseded entities should be skipped, defaults to `false`.  e.g.: `make schemagen -- -s`
 
-Additional options can also be set in the `config.php` file:
+Additional options can also be set in the `src/config.php` file:
 
 ```php
 <?php

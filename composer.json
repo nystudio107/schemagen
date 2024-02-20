@@ -1,7 +1,7 @@
 {
   "name": "nystudio107/schemagen",
   "description": "Generates PHP models representing schema.org JSON-LD types",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "keywords": [
     "craft",
     "cms",
@@ -23,5 +23,15 @@
     "symfony/serializer": "^6.0",
     "symfony/property-access": "^6.0",
     "nette/php-generator": "^4.0"
+  },
+  "require-dev": {
+    "composer/composer": "^1.0 || ^2.0",
+    "craftcms/ecs": "dev-main",
+    "phpstan/phpstan": "^1.4.6"
+  },
+  "scripts": {
+    "phpstan": "phpstan --ansi --memory-limit=1G",
+    "check-cs": "ecs check --ansi",
+    "fix-cs": "ecs check --fix --ansi"
   }
 }

@@ -1,5 +1,20 @@
 # SchemaGen Changelog
 
+## 1.0.3 - 2024.02.19
+### Added
+* Added `ecs` & `phpstan` code analysis tools
+* Added the `code-analysis.yaml` GitHub action
+
+### Changed
+* Each `@var` type can also be an array of that schema type
+* Moved the source to `src/`
+* Remove the Craft version and copyright year from the headers
+* ecs code cleanup
+* phpstan code cleanup
+
+### Fixed
+* Fixed an issue where `Schema` renamed classes were not properly named in `@var` tags
+
 ## 1.0.2 - 2023.02.01
 ### Changed
 * Code cleanup

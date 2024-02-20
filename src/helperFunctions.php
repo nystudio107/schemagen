@@ -41,9 +41,9 @@ function getSchemaVersion(string $schemaReleases): string
         'http' => [
             'method' => 'GET',
             'header' => [
-                'User-Agent: PHP'
-            ]
-        ]
+                'User-Agent: PHP',
+            ],
+        ],
     ];
     $context = stream_context_create($opts);
     $data = file_get_contents($schemaReleases, false, $context);
@@ -81,10 +81,10 @@ function getSchemaClassName(string $schemaName): string
  */
 function compileFieldData(array $propertyDef): array
 {
-    $propertyDescription = getTextValue($propertyDef['rdfs:comment']) ?? '';
+    $propertyDescription = getTextValue($propertyDef['rdfs:comment']);
 
-    $propertyTypes = empty($propertyDef['schema:rangeIncludes']['@id']) ? $propertyDef['schema:rangeIncludes'] : ([$propertyDef['schema:rangeIncludes']] ?? []);
-    $propertyHandle = getTextValue($propertyDef['rdfs:label']) ?? '';
+    $propertyTypes = empty($propertyDef['schema:rangeIncludes']['@id']) ? $propertyDef['schema:rangeIncludes'] : [$propertyDef['schema:rangeIncludes']];
+    $propertyHandle = getTextValue($propertyDef['rdfs:label']);
 
     $propertyTypesAsArray = [];
     $propertyPhpTypesAsArray = [];
@@ -110,7 +110,10 @@ function compileFieldData(array $propertyDef): array
                 $phpType = '';
                 break;
         }
-        $propertyTypesAsArray[] = $schemaType;
+        $schemaClassName = getSchemaClassName($schemaType);;
+        $propertyTypesAsArray[] = 'array';
+        $propertyTypesAsArray[] = $schemaClassName;
+        $propertyTypesAsArray[] = $schemaClassName . '[]';
         $propertyPhpTypesAsArray[] = $phpType;
     }
 
@@ -129,18 +132,18 @@ function compileFieldData(array $propertyDef): array
     );
 }
 
-function printInterfaceFile(string $schemaName, string $schemaRelease, string $craftVersion): string
+function printInterfaceFile(string $schemaName, string $schemaRelease): string
 {
     $schemaInterfaceName = $schemaName . 'Interface';
     $schemaScope = getScope($schemaName);
 
-    $file = createFileWithHeader($craftVersion);
+    $file = createFileWithHeader();
     $interface = $file->addInterface(MODEL_NAMESPACE . '\\' . $schemaInterfaceName);
     $interface->addComment("schema.org version: $schemaRelease")
         ->addComment("Interface for $schemaName.\n");
     decorateWithPackageInfo($interface, $schemaScope);
 
-    return (new Nette\PhpGenerator\PsrPrinter)->printFile($file);
+    return (new Nette\PhpGenerator\PsrPrinter())->printFile($file);
 }
 
 /**
@@ -150,7 +153,7 @@ function printInterfaceFile(string $schemaName, string $schemaRelease, string $c
  * @param array $properties
  * @return string
  */
-function printTraitFile(string $schemaName, array $properties, string $schemaRelease, string $craftVersion): string
+function printTraitFile(string $schemaName, array $properties, string $schemaRelease): string
 {
     foreach ($properties as &$fieldDef) {
         $fieldDef = compileFieldData($fieldDef);
@@ -161,7 +164,7 @@ function printTraitFile(string $schemaName, array $properties, string $schemaRel
     $schemaScope = getScope($schemaName);
     $schemaTraitName = $schemaName . 'Trait';
 
-    $file = createFileWithHeader($craftVersion);
+    $file = createFileWithHeader();
 
     $trait = $file->addTrait(MODEL_NAMESPACE . '\\' . $schemaTraitName);
     $trait->addComment("schema.org version: $schemaRelease")
@@ -176,7 +179,7 @@ function printTraitFile(string $schemaName, array $properties, string $schemaRel
             ->addComment("@var {$fieldDef['propertyType']}");
     }
 
-    return (new Nette\PhpGenerator\PsrPrinter)->printFile($file);
+    return (new Nette\PhpGenerator\PsrPrinter())->printFile($file);
 }
 
 /**
@@ -283,7 +286,7 @@ function loadAllAncestors(array &$ancestors, array $entityTree, string $classNam
  */
 function wrapValuesInSingleQuotes(array $array): array
 {
-    array_walk($array, function (&$value) {
+    array_walk($array, function(&$value) {
         $value = "'$value'";
     });
 
@@ -291,17 +294,15 @@ function wrapValuesInSingleQuotes(array $array): array
 }
 
 /**
- * @param string $craftVersion
  * @return PhpFile
  */
-function createFileWithHeader(string $craftVersion): PhpFile
+function createFileWithHeader(): PhpFile
 {
-    $currentYear = date("Y");
-    $file = new Nette\PhpGenerator\PhpFile;
-    $file->addComment("SEOmatic plugin for Craft CMS $craftVersion\n")
+    $file = new Nette\PhpGenerator\PhpFile();
+    $file->addComment("SEOmatic plugin for Craft CMS\n")
         ->addComment("A turnkey SEO implementation for Craft CMS that is comprehensive, powerful, and flexible\n")
         ->addComment('@link      https://nystudio107.com')
-        ->addComment("@copyright Copyright (c) $currentYear nystudio107");
+        ->addComment("@copyright Copyright (c) nystudio107");
     return $file;
 }
 
