@@ -33,7 +33,7 @@ phpstan: image-check
 		$(filter-out $@,$(MAKECMDGOALS)) $(MAKEFLAGS)
 # Run schemagen inside the container with the passed in args
 schemagen: image-check
-	${DOCKER_RUN} --name ${CONTAINER}-$@ ${IMAGE_NAME} php schemagen.php $(filter-out $@,$(MAKECMDGOALS)) $(MAKEFLAGS)
+	${DOCKER_RUN} --name ${CONTAINER}-$@ ${IMAGE_NAME} php src/schemagen.php $(filter-out $@,$(MAKECMDGOALS)) $(MAKEFLAGS)
 %:
 	@:
 # ref: https://stackoverflow.com/questions/6273608/how-to-pass-argument-to-makefile-from-command-line
