@@ -1,6 +1,6 @@
 # SchemaGen Changelog
 
-## 1.0.3 - UNRELEASED
+## 1.0.3 - 2024.02.19
 ### Added
 * Added `ecs` & `phpstan` code analysis tools
 * Added the `code-analysis.yaml` GitHub action
