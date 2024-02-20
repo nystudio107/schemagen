@@ -41,9 +41,9 @@ function getSchemaVersion(string $schemaReleases): string
         'http' => [
             'method' => 'GET',
             'header' => [
-                'User-Agent: PHP'
-            ]
-        ]
+                'User-Agent: PHP',
+            ],
+        ],
     ];
     $context = stream_context_create($opts);
     $data = file_get_contents($schemaReleases, false, $context);
@@ -140,7 +140,7 @@ function printInterfaceFile(string $schemaName, string $schemaRelease, string $c
         ->addComment("Interface for $schemaName.\n");
     decorateWithPackageInfo($interface, $schemaScope);
 
-    return (new Nette\PhpGenerator\PsrPrinter)->printFile($file);
+    return (new Nette\PhpGenerator\PsrPrinter())->printFile($file);
 }
 
 /**
@@ -176,7 +176,7 @@ function printTraitFile(string $schemaName, array $properties, string $schemaRel
             ->addComment("@var {$fieldDef['propertyType']}");
     }
 
-    return (new Nette\PhpGenerator\PsrPrinter)->printFile($file);
+    return (new Nette\PhpGenerator\PsrPrinter())->printFile($file);
 }
 
 /**
@@ -283,7 +283,7 @@ function loadAllAncestors(array &$ancestors, array $entityTree, string $classNam
  */
 function wrapValuesInSingleQuotes(array $array): array
 {
-    array_walk($array, function (&$value) {
+    array_walk($array, function(&$value) {
         $value = "'$value'";
     });
 
@@ -297,7 +297,7 @@ function wrapValuesInSingleQuotes(array $array): array
 function createFileWithHeader(string $craftVersion): PhpFile
 {
     $currentYear = date("Y");
-    $file = new Nette\PhpGenerator\PhpFile;
+    $file = new Nette\PhpGenerator\PhpFile();
     $file->addComment("SEOmatic plugin for Craft CMS $craftVersion\n")
         ->addComment("A turnkey SEO implementation for Craft CMS that is comprehensive, powerful, and flexible\n")
         ->addComment('@link      https://nystudio107.com')

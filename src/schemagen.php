@@ -27,7 +27,7 @@ $application = new Application();
     ->addArgument('outputDir', InputArgument::OPTIONAL, 'The output directory')
     ->addOption('skipSuperseded', 's', InputOption::VALUE_OPTIONAL, 'Whether superseded entities should be skipped', false)
     ->addOption('craft-version', 'c', InputOption::VALUE_OPTIONAL, 'Craft version to generate the models for. Defaults to 3.', 3)
-    ->setCode(function (InputInterface $input, OutputInterface $output) {
+    ->setCode(function(InputInterface $input, OutputInterface $output) {
         $source = $input->getArgument('source') ?? SCHEMA_SOURCE;
         $outputDir = $input->getArgument('outputDir') ?? OUTPUT_DIR;
         $craftVersion = ($input->getOption('craft-version') ?? '3.x');
