@@ -111,6 +111,7 @@ function compileFieldData(array $propertyDef): array
                 break;
         }
         $schemaClassName = getSchemaClassName($schemaType);;
+        $propertyTypesAsArray[] = 'array';
         $propertyTypesAsArray[] = $schemaClassName;
         $propertyTypesAsArray[] = $schemaClassName . '[]';
         $propertyPhpTypesAsArray[] = $phpType;
