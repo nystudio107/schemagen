@@ -81,10 +81,10 @@ function getSchemaClassName(string $schemaName): string
  */
 function compileFieldData(array $propertyDef): array
 {
-    $propertyDescription = getTextValue($propertyDef['rdfs:comment']) ?? '';
+    $propertyDescription = getTextValue($propertyDef['rdfs:comment']);
 
-    $propertyTypes = empty($propertyDef['schema:rangeIncludes']['@id']) ? $propertyDef['schema:rangeIncludes'] : ([$propertyDef['schema:rangeIncludes']] ?? []);
-    $propertyHandle = getTextValue($propertyDef['rdfs:label']) ?? '';
+    $propertyTypes = empty($propertyDef['schema:rangeIncludes']['@id']) ? $propertyDef['schema:rangeIncludes'] : [$propertyDef['schema:rangeIncludes']];
+    $propertyHandle = getTextValue($propertyDef['rdfs:label']);
 
     $propertyTypesAsArray = [];
     $propertyPhpTypesAsArray = [];
