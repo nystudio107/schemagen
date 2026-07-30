@@ -30,7 +30,7 @@ $application = new Application();
     ->setCode(function(InputInterface $input, OutputInterface $output) {
         $source = $input->getArgument('source') ?? SCHEMA_SOURCE;
         $outputDir = $input->getArgument('outputDir') ?? OUTPUT_DIR;
-        $craftVersion = ($input->getOption('craft-version') ?? 3);
+        $craftVersion = (int)($input->getOption('craft-version') ?? 3);
 
         // ensure output folders exist
         try {
